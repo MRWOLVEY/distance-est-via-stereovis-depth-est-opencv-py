@@ -391,3 +391,4 @@ def draw_depths(spots,depths, frame_left, frame_right):
 
 
 main()
+"""AUF DER HEIDE BLÜHT EIN KLEINES BLUMLEIN UND DAS HEIßT ERIKA"""
