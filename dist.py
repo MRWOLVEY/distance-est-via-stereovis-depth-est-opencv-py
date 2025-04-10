@@ -23,8 +23,8 @@ def main():
 
     frame_rate = 120    #Camera frame rate (maximum at 120 fps)
 
-    B = 72              #Distance between the cameras [cm]
-    f = 26              #Camera lense's focal length [mm]
+    B = 75             #Distance between the cameras [cm]
+    f = 26.7             #Camera lense's focal length [mm]
     alpha = 68.0       #Camera field of view in the horisontal plane [degrees]
 
     detections_right = obj_det(frame_right)
@@ -136,9 +136,11 @@ def main():
         p_coords_rt=spots[i]['p']['r']
         c_coords_lt=spots[i]['c']['l']
         c_coords_rt=spots[i]['c']['r']
-        for j in range(len(p_coords_lt)):            
+        for j in range(len(p_coords_lt)):
+            print(p_coords_rt[j],p_coords_lt[j])      
             depths[i]['p'].append(tri.find_depth(p_coords_rt[j],p_coords_lt[j],frame_right,frame_left,B,f,alpha))
-        for j in range(len(c_coords_lt)):            
+        for j in range(len(c_coords_lt)):         
+            print(c_coords_rt[j],c_coords_lt[j])   
             depths[i]['c'].append(tri.find_depth(c_coords_rt[j],c_coords_lt[j],frame_right,frame_left,B,f,alpha))
 
     print(depths)
@@ -333,7 +335,8 @@ def compute_distance(p1, p2):
 def closest_centers_to_roi(x_min,x_max,centers):
     roi_center=((x_min+x_max)//2,1500)
     in_roi=[obj for obj in centers if obj[0] > x_min and obj[0]<x_max]
-    return sorted(in_roi,key=lambda p:euc(p,roi_center))
+    return in_roi
+    # return sorted(in_roi,key=lambda p:euc(p,roi_center))
 
 def euc(p1,p2):
     return ((p1[0]-p2[0])**2+(p1[1]-p2[1])**2)**0.5
