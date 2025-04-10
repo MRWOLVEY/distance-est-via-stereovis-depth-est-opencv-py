@@ -23,8 +23,8 @@ def main():
 
     frame_rate = 120    #Camera frame rate (maximum at 120 fps)
 
-    B = 72               #Distance between the cameras [cm]
-    f = 26.7               #Camera lense's focal length [mm]
+    B = 72              #Distance between the cameras [cm]
+    f = 26              #Camera lense's focal length [mm]
     alpha = 68.0       #Camera field of view in the horisontal plane [degrees]
 
     detections_right = obj_det(frame_right)
@@ -68,7 +68,7 @@ def main():
     person_spot2_lt=closest_centers_to_roi(2500,4000,human_centers_left)
     spots=[{"p":{'l':person_spot1_lt,'r':person_spot1_rt},"c":{'l':car_spot1_lt,'r':car_spot1_rt}},
            {"p":{'l':person_spot2_lt,'r':person_spot2_rt},"c":{'l':car_spot2_lt,'r':car_spot2_rt}}]
-    print(spots)
+    # print(spots)
 
 
     
@@ -115,13 +115,7 @@ def main():
     cv2.putText(frame_right,"spot_1",(800,300),cv2.FONT_HERSHEY_SIMPLEX, 10, (0, 0, 0), 10)
     cv2.putText(frame_right,"spot_2",(2300,300),cv2.FONT_HERSHEY_SIMPLEX, 10, (0, 0, 0), 10)
 
-    # Display the frames with drawings
-    fig, axes = plt.subplots(1, 2, figsize=(10, 5))
-    axes[0].imshow(cv2.cvtColor(frame_left,cv2.COLOR_BGR2RGB))
-    axes[0].set_title("Left Image")
-    axes[1].imshow(cv2.cvtColor(frame_right,cv2.COLOR_BGR2RGB))
-    axes[1].set_title("Right Image")
-    plt.show()
+    
 
     #saving both frames
     # cv2.imwrite("frame_left.jpg", frame_left)
@@ -130,11 +124,33 @@ def main():
     # return
 
         ################## CALCULATING DEPTH ##################
+    # car_depths = tri.find_depth(car_centers_right, car_centers_left, frame_right, frame_left, B, f, alpha)
+    # human_depths = tri.find_depth(human_centers_right, human_centers_left, frame_right, frame_left, B, f, alpha)
+    # print("Car depths: ", car_depths)
+    # print("Human depths: ", human_depths)
 
-    car_depths = tri.find_depth(car_centers_right, car_centers_left, frame_right, frame_left, B, f, alpha)
-    human_depths = tri.find_depth(human_centers_right, human_centers_left, frame_right, frame_left, B, f, alpha)
-    print("Car depths: ", car_depths)
-    print("Human depths: ", human_depths)
+    # Calculating depth for objects in each spot
+    depths=[{'p':[],'c':[]} for i in range(len(spots))]
+    for i in range(len(spots)):
+        p_coords_lt=spots[i]['p']['l']
+        p_coords_rt=spots[i]['p']['r']
+        c_coords_lt=spots[i]['c']['l']
+        c_coords_rt=spots[i]['c']['r']
+        for j in range(len(p_coords_lt)):            
+            depths[i]['p'].append(tri.find_depth(p_coords_rt[j],p_coords_lt[j],frame_right,frame_left,B,f,alpha))
+        for j in range(len(c_coords_lt)):            
+            depths[i]['c'].append(tri.find_depth(c_coords_rt[j],c_coords_lt[j],frame_right,frame_left,B,f,alpha))
+
+    print(depths)
+    draw_depths(spots,depths,frame_left,frame_right)
+
+    # Display the frames with drawings
+    fig, axes = plt.subplots(1, 2, figsize=(10, 5))
+    axes[0].imshow(cv2.cvtColor(frame_left,cv2.COLOR_BGR2RGB))
+    axes[0].set_title("Left Image")
+    axes[1].imshow(cv2.cvtColor(frame_right,cv2.COLOR_BGR2RGB))
+    axes[1].set_title("Right Image")
+    plt.show()
 
     # Assuming we have our depth values calculated properly:
     """
@@ -356,6 +372,21 @@ def draw_spot_coordinates(spots, frame_left, frame_right):
             cv2.circle(frame_right, coord, radius, car_color, thickness)
 
     return frame_left, frame_right
+def draw_depths(spots,depths, frame_left, frame_right):
+    color=(0,0,0)
+
+    for i in range(len(spots)):
+        # Draw person coordinates
+        for j in range(len(spots[i]['p']['l'])):
+            cv2.putText(frame_left,str(depths[i]['p'][j]),spots[i]['p']['l'][j],cv2.FONT_HERSHEY_SIMPLEX, 4, (0, 0, 0), 4)
+        for j in range(len(spots[i]['p']['r'])):
+            cv2.putText(frame_right,str(depths[i]['p'][j]),spots[i]['p']['r'][j],cv2.FONT_HERSHEY_SIMPLEX, 4, (0, 0, 0), 4)
+        
+        # Draw car coordinates
+        for j in range(len(spots[i]['c']['l'])):
+            cv2.putText(frame_left,str(depths[i]['c'][j]),spots[i]['c']['l'][j],cv2.FONT_HERSHEY_SIMPLEX, 4, (0, 0, 0), 4)
+        for j in range(len(spots[i]['c']['r'])):
+            cv2.putText(frame_right,str(depths[i]['c'][j]),spots[i]['c']['r'][j],cv2.FONT_HERSHEY_SIMPLEX, 4, (0, 0, 0), 4)
 
 
 main()
