@@ -2,3 +2,7 @@
 *.rar
 depth/
 samples/
+*.jpg
+*.JPG
+*.jpeg
+*.JPEG

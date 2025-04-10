@@ -338,8 +338,6 @@ def closest_centers_to_roi(x_min,x_max,centers):
 def euc(p1,p2):
     return ((p1[0]-p2[0])**2+(p1[1]-p2[1])**2)**0.5
 
-import cv2
-
 def draw_spot_coordinates(spots, frame_left, frame_right):
     """
     Draws all person and car coordinates from left and right images onto the given frames.
