@@ -25,7 +25,9 @@ def main():
 
     B = 75             #Distance between the cameras [cm]
     f = 26.7             #Camera lense's focal length [mm]
-    alpha = 68.0       #Camera field of view in the horisontal plane [degrees]
+    alpha = 85.0       #Camera field of view in the horisontal plane [degrees] 
+
+    """It's all about picking the right FOV (alpha)"""
 
     detections_right = obj_det(frame_right)
     detections_left = obj_det(frame_left)
@@ -115,14 +117,6 @@ def main():
     cv2.putText(frame_right,"spot_1",(800,300),cv2.FONT_HERSHEY_SIMPLEX, 10, (0, 0, 0), 10)
     cv2.putText(frame_right,"spot_2",(2300,300),cv2.FONT_HERSHEY_SIMPLEX, 10, (0, 0, 0), 10)
 
-    
-
-    #saving both frames
-    # cv2.imwrite("frame_left.jpg", frame_left)
-    # cv2.imwrite("frame_right.jpg", frame_right)
-
-    # return
-
         ################## CALCULATING DEPTH ##################
     # car_depths = tri.find_depth(car_centers_right, car_centers_left, frame_right, frame_left, B, f, alpha)
     # human_depths = tri.find_depth(human_centers_right, human_centers_left, frame_right, frame_left, B, f, alpha)
@@ -131,20 +125,58 @@ def main():
 
     # Calculating depth for objects in each spot
     depths=[{'p':[],'c':[]} for i in range(len(spots))]
+    positions_3d = {} #considering only one image (left) to calculate the distances in the 3d world
+    distances = {}
     for i in range(len(spots)):
         p_coords_lt=spots[i]['p']['l']
         p_coords_rt=spots[i]['p']['r']
         c_coords_lt=spots[i]['c']['l']
         c_coords_rt=spots[i]['c']['r']
+        print("p_coords_lt", p_coords_lt)
         for j in range(len(p_coords_lt)):
-            print(p_coords_rt[j],p_coords_lt[j])      
+            print('j at people', j)
+            print(p_coords_rt[j],p_coords_lt[j])  
+            # depth of current person(j) in spot(i)
             depths[i]['p'].append(tri.find_depth(p_coords_rt[j],p_coords_lt[j],frame_right,frame_left,B,f,alpha))
-        for j in range(len(c_coords_lt)):         
+            position = pixel_to_3d(p_coords_lt[j][0], p_coords_lt[j][1], depths[i]['p'][j])
+            
+            positions_3d[f"Person {i}_{j}"] = position
+            print(f"Person {i}_{j} 3D Position: {position}")
+        print('c_coords_lt', c_coords_lt)
+        for j in range(len(c_coords_lt)):  
+            print('j at cars', j)       
             print(c_coords_rt[j],c_coords_lt[j])   
+            #depth of current car(j) in sport(i)
             depths[i]['c'].append(tri.find_depth(c_coords_rt[j],c_coords_lt[j],frame_right,frame_left,B,f,alpha))
+            position = pixel_to_3d(c_coords_lt[j][0], c_coords_lt[j][1], depths[i]['c'][j])
+            
+            positions_3d[f"Car {i}_{j}"] = position
+            print(f"Car {i}_{j} 3D Position: {position}")
 
-    print(depths)
+    for i in range(len(spots)):
+        for j in range(len(spots[i]['p']['l'])):
+            for k in range(len(spots[i]['c']['l'])):
+                p1 = positions_3d[f'Car {i}_{k}']
+                p2 = positions_3d[f'Person {i}_{j}']
+                distance = compute_distance(p1, p2)
+                distances[f"Car {i}_{k} and Person {i}_{j}"] = distance
+
+                print(f"Distance between Car {i}_{k} and Person {i}_{j}: {distance:.2f} meters")
+                
+
+
+    
+
+    print('depths', depths)
+    print('positions in 3d', positions_3d)
     draw_depths(spots,depths,frame_left,frame_right)
+
+    for i in range(len(spots)):
+        for j in range(len(c_coords_lt)):
+            for k in range(len(p_coords_lt)):
+                print((p_coords_lt[k][0], p_coords_lt[k][1]))
+                cv2.line(frame_left, (p_coords_lt[k][0], p_coords_lt[k][1]), (c_coords_lt[j][0], c_coords_lt[j][1]), (255, 0, 0), 10)
+                cv2.putText(frame_left, f"Distance: {distances[f"Car {i}_{j} and Person {i}_{k}"]}", (p_coords_lt[k][0], p_coords_lt[k][1]), cv2.FONT_HERSHEY_SIMPLEX, 10, (255, 0, 0), 10)
 
     # Display the frames with drawings
     fig, axes = plt.subplots(1, 2, figsize=(10, 5))
@@ -155,6 +187,11 @@ def main():
     plt.show()
 
     # Assuming we have our depth values calculated properly:
+
+
+
+
+
     """
     circles_right = (x, y)
     circles_left = (x, y)
@@ -290,7 +327,8 @@ def get_centers(detections):
 
     return cars_centers, humans_centers
         
-def pixel_to_3d(u, v, depth, K):
+# Cam Calib is needed to get K to convert pixels to 3d world distance
+def pixel_to_3d(u, v, depth, K=None):
     """
     Converts a pixel coordinate (u, v) and its depth value to a 3D world coordinate.
     
@@ -302,6 +340,12 @@ def pixel_to_3d(u, v, depth, K):
     Returns:
         (X, Y, Z) in meters.
     """
+    # Camera intrinsic parameters (arbitrary values)
+    K = np.array([
+        [35, 0, 640],  # fx, 0, cx
+        [0, 35, 360],  # 0, fy, cy
+        [0, 0, 1]        # 0, 0, 1
+    ])
     # Camera intrinsics
     fx, fy = K[0, 0], K[1, 1]  # Focal lengths
     cx, cy = K[0, 2], K[1, 2]  # Principal point
@@ -314,8 +358,8 @@ def pixel_to_3d(u, v, depth, K):
     # Convert pixel coordinates to real-world coordinates
     X = (u - cx) * Z / fx
     Y = (v - cy) * Z / fy
-    X = X.cpu().numpy()
-    Y = Y.cpu().numpy()
+    # X = X.cpu().numpy()
+    # Y = Y.cpu().numpy()
     # print("X, Y, Z", type(X), type(Y), type(Z))
     return np.array([X, Y, Z])
 
@@ -333,6 +377,7 @@ def compute_distance(p1, p2):
     return np.linalg.norm(p1 - p2)
 
 def closest_centers_to_roi(x_min,x_max,centers):
+    """roi center unused??"""
     roi_center=((x_min+x_max)//2,1500)
     in_roi=[obj for obj in centers if obj[0] > x_min and obj[0]<x_max]
     return in_roi
@@ -355,7 +400,7 @@ def draw_spot_coordinates(spots, frame_left, frame_right):
     """
     # Define colors for drawing
     person_color = (255, 0, 0)  # Green
-    car_color = (255, 0, 0)     # Blue
+    car_color = (0, 0, 255)     # Blue
     radius = 100
     thickness = 2  # Filled circle
 
@@ -373,21 +418,26 @@ def draw_spot_coordinates(spots, frame_left, frame_right):
             cv2.circle(frame_right, coord, radius, car_color, thickness)
 
     return frame_left, frame_right
+
 def draw_depths(spots,depths, frame_left, frame_right):
-    color=(0,0,0)
+    color=(255,255,255)
 
     for i in range(len(spots)):
         # Draw person coordinates
         for j in range(len(spots[i]['p']['l'])):
-            cv2.putText(frame_left,str(depths[i]['p'][j]),spots[i]['p']['l'][j],cv2.FONT_HERSHEY_SIMPLEX, 4, (0, 0, 0), 4)
+            cv2.putText(frame_left,f"{depths[i]['p'][j]:.2f}",spots[i]['p']['l'][j],cv2.FONT_HERSHEY_SIMPLEX, 4, color, 4)
         for j in range(len(spots[i]['p']['r'])):
-            cv2.putText(frame_right,str(depths[i]['p'][j]),spots[i]['p']['r'][j],cv2.FONT_HERSHEY_SIMPLEX, 4, (0, 0, 0), 4)
+            cv2.putText(frame_right,f"{depths[i]['p'][j]:.2f}",spots[i]['p']['r'][j],cv2.FONT_HERSHEY_SIMPLEX, 4, color, 4)
         
         # Draw car coordinates
         for j in range(len(spots[i]['c']['l'])):
-            cv2.putText(frame_left,str(depths[i]['c'][j]),spots[i]['c']['l'][j],cv2.FONT_HERSHEY_SIMPLEX, 4, (0, 0, 0), 4)
+            cv2.putText(frame_left,f"{depths[i]['c'][j]:.2f}",spots[i]['c']['l'][j],cv2.FONT_HERSHEY_SIMPLEX, 4, color, 4)
         for j in range(len(spots[i]['c']['r'])):
-            cv2.putText(frame_right,str(depths[i]['c'][j]),spots[i]['c']['r'][j],cv2.FONT_HERSHEY_SIMPLEX, 4, (0, 0, 0), 4)
+            cv2.putText(frame_right,f"{depths[i]['c'][j]:.2f}",spots[i]['c']['r'][j],cv2.FONT_HERSHEY_SIMPLEX, 4, color, 4)
+
+
+
+# Disparity = center_x_left - center_x_right
 
 
 main()
