@@ -2,14 +2,17 @@ import cv2 as cv
 import numpy as np
 import matplotlib.pyplot as plt
 
-img1 = cv.imread("samples/lt/lt3.jpg")#lt
-img2 = cv.imread("samples/rt/rt3.jpg")#rt
+# img1 = cv.imread("samples/lt/lt3.jpg")#lt
+# img2 = cv.imread("samples/rt/rt3.jpg")#rt
+img1 = cv.imread("ltbb.jpg")#lt
+img2 = cv.imread("rtbb.jpg")#rt
 
 
 #draw a grid with equal area squares on both images
 def draw_grid(image,step,):
     # Get image dimensions
     height, width = image.shape[:2]
+    print(height, width)
 
     # Draw vertical lines
     for x in range(0, width, step):

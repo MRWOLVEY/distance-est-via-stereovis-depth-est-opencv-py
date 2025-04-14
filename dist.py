@@ -18,8 +18,10 @@ import triangulation as tri
 # cap_right = cv2.VideoCapture(0, cv2.CAP_DSHOW)                    
 # cap_left =  cv2.VideoCapture(1, cv2.CAP_DSHOW)
 def main():
-    frame_right = cv2.imread('samples/rt/rt3.jpg')
-    frame_left = cv2.imread('samples/lt/lt3.jpg')
+    # frame_right = cv2.imread('samples/rt/rt3.jpg')
+    # frame_left = cv2.imread('samples/lt/lt3.jpg')
+    frame_right = cv2.imread('ltbb.jpg')
+    frame_left = cv2.imread('rtbb.jpg')
 
     frame_rate = 120    #Camera frame rate (maximum at 120 fps)
 
@@ -58,16 +60,16 @@ def main():
     # Get the centers of the detected objects, categorized based on ROIs(spots)
     car_centers_right, human_centers_right = get_centers(detections_right)
     car_centers_left, human_centers_left = get_centers(detections_left)
-    car_spot1_rt=closest_centers_to_roi(500,2000,car_centers_right)
-    car_spot1_lt=closest_centers_to_roi(1000,2500,car_centers_left)
-    car_spot2_rt=closest_centers_to_roi(2000,3500,car_centers_right)
-    car_spot2_lt=closest_centers_to_roi(2500,4000,car_centers_left)
-    person_spot1_rt=closest_centers_to_roi(500,2000,human_centers_right)
-    person_spot1_lt=closest_centers_to_roi(1000,2500,human_centers_left)
-    person_spot2_rt=closest_centers_to_roi(2000,3500,human_centers_right)
-    person_spot2_lt=closest_centers_to_roi(2500,4000,human_centers_left)
-    spots=[{"p":{'l':person_spot1_lt,'r':person_spot1_rt},"c":{'l':car_spot1_lt,'r':car_spot1_rt}},
-           {"p":{'l':person_spot2_lt,'r':person_spot2_rt},"c":{'l':car_spot2_lt,'r':car_spot2_rt}}]
+    # car_spot1_rt=closest_centers_to_roi(500,2000,car_centers_right)
+    # car_spot1_lt=closest_centers_to_roi(1000,2500,car_centers_left)
+    # car_spot2_rt=closest_centers_to_roi(2000,3500,car_centers_right)
+    # car_spot2_lt=closest_centers_to_roi(2500,4000,car_centers_left)
+    # person_spot1_rt=closest_centers_to_roi(500,2000,human_centers_right)
+    # person_spot1_lt=closest_centers_to_roi(1000,2500,human_centers_left)
+    # person_spot2_rt=closest_centers_to_roi(2000,3500,human_centers_right)
+    # person_spot2_lt=closest_centers_to_roi(2500,4000,human_centers_left)
+    # spots=[{"p":{'l':person_spot1_lt,'r':person_spot1_rt},"c":{'l':car_spot1_lt,'r':car_spot1_rt}},
+    #        {"p":{'l':person_spot2_lt,'r':person_spot2_rt},"c":{'l':car_spot2_lt,'r':car_spot2_rt}}]
     # print(spots)
 
 
@@ -90,6 +92,7 @@ def main():
     # for (x, y) in temp_l:
     #     cv2.circle(frame_left, (x, y), radius=5, color=(0, 255, 0), thickness=2)
 
+    """kjasdlfjalsdfjkasldkfjsldkfjafj"""
     #drawing detection boxes
     for i in range(len(detections_right)):
         x1, y1, x2, y2 = map(int, detections_right[i].xyxy[0])  # Convert coordinates to integers
@@ -100,20 +103,20 @@ def main():
         x1, y1, x2, y2 = map(int, box.xyxy[0])  # Convert coordinates to integers
         cv2.rectangle(frame_left, (x1, y1), (x2, y2), (0, 255, 0), 2)  # Green box
         cv2.putText(frame_left, str(box.cls[0]), (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
+    """asdflkajsdflkjahsdflkajsdflkja"""
+    # draw_spot_coordinates(spots,frame_left,frame_right)
 
-    draw_spot_coordinates(spots,frame_left,frame_right)
+    # cv2.line(frame_left,(1000,0),(1000,3000),(0,0,255),2)
+    # cv2.line(frame_left,(2500,0),(2500,3000),(0,0,255),2)
+    # cv2.line(frame_left,(3900,0),(3900,3000),(0,0,255),2)
+    # cv2.line(frame_right,(500,0),(500,3000),(0,0,255),2) 
+    # cv2.line(frame_right,(2000,0),(2000,3000),(0,0,255),2) 
+    # cv2.line(frame_right,(3500,0),(3500,3000),(0,0,255),2) 
 
-    cv2.line(frame_left,(1000,0),(1000,3000),(0,0,255),2)
-    cv2.line(frame_left,(2500,0),(2500,3000),(0,0,255),2)
-    cv2.line(frame_left,(3900,0),(3900,3000),(0,0,255),2)
-    cv2.line(frame_right,(500,0),(500,3000),(0,0,255),2) 
-    cv2.line(frame_right,(2000,0),(2000,3000),(0,0,255),2) 
-    cv2.line(frame_right,(3500,0),(3500,3000),(0,0,255),2) 
-
-    cv2.putText(frame_left,"spot_1", (1300,300),cv2.FONT_HERSHEY_SIMPLEX, 10, (0, 0, 0), 10)
-    cv2.putText(frame_left,"spot_2", (2800,300),cv2.FONT_HERSHEY_SIMPLEX, 10, (0, 0, 0), 10)
-    cv2.putText(frame_right,"spot_1",(800,300),cv2.FONT_HERSHEY_SIMPLEX, 10, (0, 0, 0), 10)
-    cv2.putText(frame_right,"spot_2",(2300,300),cv2.FONT_HERSHEY_SIMPLEX, 10, (0, 0, 0), 10)
+    # cv2.putText(frame_left,"spot_1", (1300,300),cv2.FONT_HERSHEY_SIMPLEX, 10, (0, 0, 0), 10)
+    # cv2.putText(frame_left,"spot_2", (2800,300),cv2.FONT_HERSHEY_SIMPLEX, 10, (0, 0, 0), 10)
+    # cv2.putText(frame_right,"spot_1",(800,300),cv2.FONT_HERSHEY_SIMPLEX, 10, (0, 0, 0), 10)
+    # cv2.putText(frame_right,"spot_2",(2300,300),cv2.FONT_HERSHEY_SIMPLEX, 10, (0, 0, 0), 10)
 
     
 
@@ -124,27 +127,27 @@ def main():
     # return
 
         ################## CALCULATING DEPTH ##################
-    # car_depths = tri.find_depth(car_centers_right, car_centers_left, frame_right, frame_left, B, f, alpha)
+    car_depths = tri.find_depth((325,300), (535,295), frame_right, frame_left, B, f, alpha)
     # human_depths = tri.find_depth(human_centers_right, human_centers_left, frame_right, frame_left, B, f, alpha)
-    # print("Car depths: ", car_depths)
+    print("Car depths: ", car_depths)
     # print("Human depths: ", human_depths)
 
     # Calculating depth for objects in each spot
-    depths=[{'p':[],'c':[]} for i in range(len(spots))]
-    for i in range(len(spots)):
-        p_coords_lt=spots[i]['p']['l']
-        p_coords_rt=spots[i]['p']['r']
-        c_coords_lt=spots[i]['c']['l']
-        c_coords_rt=spots[i]['c']['r']
-        for j in range(len(p_coords_lt)):
-            print(p_coords_rt[j],p_coords_lt[j])      
-            depths[i]['p'].append(tri.find_depth(p_coords_rt[j],p_coords_lt[j],frame_right,frame_left,B,f,alpha))
-        for j in range(len(c_coords_lt)):         
-            print(c_coords_rt[j],c_coords_lt[j])   
-            depths[i]['c'].append(tri.find_depth(c_coords_rt[j],c_coords_lt[j],frame_right,frame_left,B,f,alpha))
+    # depths=[{'p':[],'c':[]} for i in range(len(spots))]
+    # for i in range(len(spots)):
+    #     p_coords_lt=spots[i]['p']['l']
+    #     p_coords_rt=spots[i]['p']['r']
+    #     c_coords_lt=spots[i]['c']['l']
+    #     c_coords_rt=spots[i]['c']['r']
+    #     for j in range(len(p_coords_lt)):
+    #         print(p_coords_rt[j],p_coords_lt[j])      
+    #         depths[i]['p'].append(tri.find_depth(p_coords_rt[j],p_coords_lt[j],frame_right,frame_left,B,f,alpha))
+    #     for j in range(len(c_coords_lt)):         
+    #         print(c_coords_rt[j],c_coords_lt[j])   
+    #         depths[i]['c'].append(tri.find_depth(c_coords_rt[j],c_coords_lt[j],frame_right,frame_left,B,f,alpha))
 
-    print(depths)
-    draw_depths(spots,depths,frame_left,frame_right)
+    # print(depths)
+    # draw_depths(spots,depths,frame_left,frame_right)
 
     # Display the frames with drawings
     fig, axes = plt.subplots(1, 2, figsize=(10, 5))

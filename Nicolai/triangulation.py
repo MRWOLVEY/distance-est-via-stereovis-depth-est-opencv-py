@@ -10,6 +10,8 @@ def find_depth(circle_right, circle_left, frame_right, frame_left, baseline, f):
     height_right, width_right, depth_right = frame_right.shape
     height_left, width_left, depth_left = frame_left.shape
 
+    
+
     if width_right != width_left:
         print('Left and right camera frames do not have the same pixel width')
         return None
