@@ -10,8 +10,36 @@ from ultralytics import YOLO
 # Functions
 # import HSV_filter as hsv
 # import shape_recognition as shape
-import triangulation as tri
+# import triangulation as tri
 #import calibration as calib
+
+def find_depth(circle_right, circle_left, frame_right, frame_left, baseline, f,alpha):
+
+    # CONVERT FOCAL LENGTH f FROM [mm] TO [pixel]:
+    height_right, width_right, depth_right = frame_right.shape
+    height_left, width_left, depth_left = frame_left.shape
+
+    
+
+    if width_right == width_left:
+        f_pixel = (width_right * 0.5) / np.tan(alpha * 0.5 * np.pi/180)
+
+    else:
+        print('Left and right camera frames do not have the same pixel width')
+
+    x_right = circle_right[0]
+    x_left = circle_left[0]
+    print("xr", x_right)
+    print("xl", x_left)
+
+    # CALCULATE THE DISPARITY:
+    disparity = x_left - x_right  # Displacement between left and right frames [pixels]
+    print("disparity", disparity)
+
+    # CALCULATE DEPTH z:
+    zDepth = (baseline * f_pixel) / disparity  # Depth in [cm]
+
+    return abs(zDepth)
 
 
 # Open both cameras
@@ -27,7 +55,7 @@ def main():
 
     B = 10             #Distance between the cameras [cm]
     f = 26             #Camera lense's focal length [mm]
-    alpha = 0       #Camera field of view in the horisontal plane [degrees]
+    alpha = 75       #Camera field of view in the horisontal plane [degrees]
 
     # detections_right = obj_det(frame_right)
     # detections_left = obj_det(frame_left)
@@ -127,9 +155,11 @@ def main():
     # return
 
         ################## CALCULATING DEPTH ##################
-    bo22le_depth = tri.find_depth((325,300), (535,295), frame_right, frame_left, B, f, alpha)
+    bo22le_depth = find_depth((325,300), (535,295), frame_right, frame_left, B, f,alpha)
+    cup_depth = find_depth((810,0), (674,295), frame_right, frame_left, B, f,alpha)
     # human_depths = tri.find_depth(human_centers_right, human_centers_left, frame_right, frame_left, B, f, alpha)
     print("bo22le depth: ", bo22le_depth)
+    print("cup depth: ", cup_depth)
     # print("Human depths: ", human_depths)
 
     draw_spot_coordinates([(325,300), (535,295)], frame_left, frame_right)

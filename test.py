@@ -12,7 +12,6 @@ img2 = cv.imread("rtbb.jpg")#rt
 def draw_grid(image,step,):
     # Get image dimensions
     height, width = image.shape[:2]
-    print(height, width)
 
     # Draw vertical lines
     for x in range(0, width, step):
