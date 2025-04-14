@@ -23,6 +23,7 @@ def find_depth(circle_right, circle_left, frame_right, frame_left, baseline, f):
 
     # CALCULATE THE DISPARITY:
     disparity = x_left - x_right  # Displacement between left and right frames [pixels]
+    print("disparity", disparity)
 
     # CALCULATE DEPTH z:
     zDepth = (baseline * f) / disparity  # Depth in [cm]

@@ -29,8 +29,8 @@ def main():
     f = 26             #Camera lense's focal length [mm]
     alpha = 0       #Camera field of view in the horisontal plane [degrees]
 
-    detections_right = obj_det(frame_right)
-    detections_left = obj_det(frame_left)
+    # detections_right = obj_det(frame_right)
+    # detections_left = obj_det(frame_left)
     """
     # Drawing bounding boxes
     for box in detections_right:
@@ -58,8 +58,8 @@ def main():
     """
 
     # Get the centers of the detected objects, categorized based on ROIs(spots)
-    car_centers_right, human_centers_right = get_centers(detections_right)
-    car_centers_left, human_centers_left = get_centers(detections_left)
+    # car_centers_right, human_centers_right = get_centers(detections_right)
+    # car_centers_left, human_centers_left = get_centers(detections_left)
     # car_spot1_rt=closest_centers_to_roi(500,2000,car_centers_right)
     # car_spot1_lt=closest_centers_to_roi(1000,2500,car_centers_left)
     # car_spot2_rt=closest_centers_to_roi(2000,3500,car_centers_right)
@@ -75,8 +75,8 @@ def main():
 
     
     #conf scores of all detections
-    confs_right=[box.conf[0].item() for box in detections_right]
-    confs_left=[box.conf[0].item() for box in detections_left]
+    # confs_right=[box.conf[0].item() for box in detections_right]
+    # confs_left=[box.conf[0].item() for box in detections_left]
 
     # print('left frame: \n', 'cars', car_centers_left, '\n', 'humans', human_centers_left, '\n', 'confs', confs_left, '\n')
     # print('right frame: \n', 'cars', car_centers_right, '\n', 'humans', human_centers_right, '\n', 'confs', confs_right, '\n')   
@@ -94,15 +94,15 @@ def main():
 
     """kjasdlfjalsdfjkasldkfjsldkfjafj"""
     #drawing detection boxes
-    for i in range(len(detections_right)):
-        x1, y1, x2, y2 = map(int, detections_right[i].xyxy[0])  # Convert coordinates to integers
-        cv2.rectangle(frame_right, (x1, y1), (x2, y2), (0, 255, 0), 2)  # Green box
-        cv2.putText(frame_right, str(detections_right[i].cls[0]), (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
+    # for i in range(len(detections_right)):
+    #     x1, y1, x2, y2 = map(int, detections_right[i].xyxy[0])  # Convert coordinates to integers
+    #     cv2.rectangle(frame_right, (x1, y1), (x2, y2), (0, 255, 0), 2)  # Green box
+    #     cv2.putText(frame_right, str(detections_right[i].cls[0]), (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
 
-    for box in detections_left:
-        x1, y1, x2, y2 = map(int, box.xyxy[0])  # Convert coordinates to integers
-        cv2.rectangle(frame_left, (x1, y1), (x2, y2), (0, 255, 0), 2)  # Green box
-        cv2.putText(frame_left, str(box.cls[0]), (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
+    # for box in detections_left:
+    #     x1, y1, x2, y2 = map(int, box.xyxy[0])  # Convert coordinates to integers
+    #     cv2.rectangle(frame_left, (x1, y1), (x2, y2), (0, 255, 0), 2)  # Green box
+    #     cv2.putText(frame_left, str(box.cls[0]), (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
     """asdflkajsdflkjahsdflkajsdflkja"""
     # draw_spot_coordinates(spots,frame_left,frame_right)
 
@@ -127,10 +127,13 @@ def main():
     # return
 
         ################## CALCULATING DEPTH ##################
-    car_depths = tri.find_depth((325,300), (535,295), frame_right, frame_left, B, f, alpha)
+    bo22le_depth = tri.find_depth((325,300), (535,295), frame_right, frame_left, B, f, alpha)
     # human_depths = tri.find_depth(human_centers_right, human_centers_left, frame_right, frame_left, B, f, alpha)
-    print("Car depths: ", car_depths)
+    print("bo22le depth: ", bo22le_depth)
     # print("Human depths: ", human_depths)
+
+    draw_spot_coordinates([(325,300), (535,295)], frame_left, frame_right)
+
 
     # Calculating depth for objects in each spot
     # depths=[{'p':[],'c':[]} for i in range(len(spots))]
@@ -344,7 +347,7 @@ def closest_centers_to_roi(x_min,x_max,centers):
 def euc(p1,p2):
     return ((p1[0]-p2[0])**2+(p1[1]-p2[1])**2)**0.5
 
-def draw_spot_coordinates(spots, frame_left, frame_right):
+def draw_spot_coordinates(coords, frame_left, frame_right):
     """
     Draws all person and car coordinates from left and right images onto the given frames.
 
@@ -359,21 +362,23 @@ def draw_spot_coordinates(spots, frame_left, frame_right):
     # Define colors for drawing
     person_color = (255, 0, 0)  # Green
     car_color = (255, 0, 0)     # Blue
-    radius = 100
+    radius = 10
     thickness = 2  # Filled circle
 
-    for spot in spots:
+    # for spot in spots:
         # Draw person coordinates
-        for coord in spot['p']['l']:
-            cv2.circle(frame_left, coord, radius, person_color, thickness)
-        for coord in spot['p']['r']:
-            cv2.circle(frame_right, coord, radius, person_color, thickness)
+        # for coord in spot['p']['l']:
+        #     cv2.circle(frame_left, coord, radius, person_color, thickness)
+        # for coord in spot['p']['r']:
+        #     cv2.circle(frame_right, coord, radius, person_color, thickness)
         
-        # Draw car coordinates
-        for coord in spot['c']['l']:
-            cv2.circle(frame_left, coord, radius, car_color, thickness)
-        for coord in spot['c']['r']:
-            cv2.circle(frame_right, coord, radius, car_color, thickness)
+        # # Draw car coordinates
+        # for coord in spot['c']['l']:
+        #     cv2.circle(frame_left, coord, radius, car_color, thickness)
+        # for coord in spot['c']['r']:
+        #     cv2.circle(frame_right, coord, radius, car_color, thickness)
+    cv2.circle(frame_left, coords[0], radius, car_color, thickness)
+    cv2.circle(frame_right, coords[1], radius, car_color, thickness)
 
     return frame_left, frame_right
 def draw_depths(spots,depths, frame_left, frame_right):
