@@ -23,9 +23,9 @@ def main():
 
     frame_rate = 120    #Camera frame rate (maximum at 120 fps)
 
-    B = 75             #Distance between the cameras [cm]
-    f = 26.7             #Camera lense's focal length [mm]
-    alpha = 68.0       #Camera field of view in the horisontal plane [degrees]
+    B = 10             #Distance between the cameras [cm]
+    f = 26             #Camera lense's focal length [mm]
+    alpha = 0       #Camera field of view in the horisontal plane [degrees]
 
     detections_right = obj_det(frame_right)
     detections_left = obj_det(frame_left)
