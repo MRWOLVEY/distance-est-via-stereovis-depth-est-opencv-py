@@ -164,6 +164,13 @@ def main():
 
     draw_spot_coordinates([(325,300), (535,295)], frame_left, frame_right)
 
+    K = np.load('./mediumCalib/results/CalibrationMatrix_college_cpt.npz')['Camera_matrix']
+    bo22le_position = pixel_to_3d(325, 300, bo22le_depth/100, K)
+    cup_position = pixel_to_3d(680, 400, cup_depth/100, K)
+
+    distance = compute_distance(bo22le_position, cup_position)
+    print("Distance between bo22le and cup: ", distance)
+
 
     # Calculating depth for objects in each spot
     # depths=[{'p':[],'c':[]} for i in range(len(spots))]
@@ -345,14 +352,18 @@ def pixel_to_3d(u, v, depth, K):
     # Convert depth (inverting if necessary)
     # if isinstance(depth, torch.Tensor):
     #     depth = depth.cpu().numpy()
-    Z = 1.0 / (depth + 1e-6)  # Convert inverse depth to real-world depth
+    depth_in_meters = True
+    if depth_in_meters:
+        Z = depth
+    else:
+        Z = 1.0 / (depth + 1e-6)  # Convert inverse depth to real-world depth
 
     # Convert pixel coordinates to real-world coordinates
     X = (u - cx) * Z / fx
     Y = (v - cy) * Z / fy
-    X = X.cpu().numpy()
-    Y = Y.cpu().numpy()
-    # print("X, Y, Z", type(X), type(Y), type(Z))
+    # X = X.cpu().numpy()
+    # Y = Y.cpu().numpy()
+    print("X, Y, Z", X, Y, Z)
     return np.array([X, Y, Z])
 
 
