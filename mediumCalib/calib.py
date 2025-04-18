@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 # corners of the square blocks (vertical and horizontal)
 Ch_Dim = (8, 6)
-Sq_size = 24  #milimeters
+Sq_size = 19  #milimeters
 criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)
 
 
@@ -42,7 +42,7 @@ ret, mtx, dist_coeff, R_vecs, T_vecs = cv2.calibrateCamera(obj_points_3D, img_po
 print("calibrated")
 result_path = './results/'
 np.savez(
-    f"{result_path}/CalibrationMatrix_college_cpt",
+    f"{result_path}/CalibrationMatrix_bigbang_cpt",
     Camera_matrix=mtx,
     distCoeff=dist_coeff,
     RotationalV=R_vecs,

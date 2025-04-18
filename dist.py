@@ -164,7 +164,7 @@ def main():
 
     draw_spot_coordinates([(325,300), (535,295)], frame_left, frame_right)
 
-    K = np.load('./mediumCalib/results/CalibrationMatrix_college_cpt.npz')['Camera_matrix']
+    K = np.load('./mediumCalib/results/CalibrationMatrix_bigbang_cpt.npz')['Camera_matrix']
     bo22le_position = pixel_to_3d(325, 300, bo22le_depth/100, K)
     cup_position = pixel_to_3d(680, 400, cup_depth/100, K)
 

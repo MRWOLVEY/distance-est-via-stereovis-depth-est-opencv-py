@@ -1,7 +1,7 @@
 import numpy as np
 
 # Load the file
-data = np.load("CalibrationMatrix_college_cpt.npz")
+data = np.load("CalibrationMatrix_bigbang_cpt.npz")
 
 # Print what's inside
 print("Keys in file:", data.files)
