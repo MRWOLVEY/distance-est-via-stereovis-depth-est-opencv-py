@@ -23,9 +23,9 @@ def main():
 
     frame_rate = 120    #Camera frame rate (maximum at 120 fps)
 
-    B = 10             #Distance between the cameras [cm]
-    f = 26             #Camera lense's focal length [mm]
-    alpha = 0       #Camera field of view in the horisontal plane [degrees]
+    B = 30             #Distance between the cameras [cm]
+    f = 30             #Camera lense's focal length [mm]
+    alpha = 60       #Camera field of view in the horisontal plane [degrees]
 
     detections_right = obj_det(frame_right)
     detections_left = obj_det(frame_left)
@@ -309,14 +309,18 @@ def pixel_to_3d(u, v, depth, K):
     # Convert depth (inverting if necessary)
     # if isinstance(depth, torch.Tensor):
     #     depth = depth.cpu().numpy()
-    Z = 1.0 / (depth + 1e-6)  # Convert inverse depth to real-world depth
+    depth_in_meters = True
+    if depth_in_meters:
+        Z = depth
+    else:
+        Z = 1.0 / (depth + 1e-6)  # Convert inverse depth to real-world depth
 
     # Convert pixel coordinates to real-world coordinates
     X = (u - cx) * Z / fx
     Y = (v - cy) * Z / fy
-    X = X.cpu().numpy()
-    Y = Y.cpu().numpy()
-    # print("X, Y, Z", type(X), type(Y), type(Z))
+    # X = X.cpu().numpy()
+    # Y = Y.cpu().numpy()
+    print("X, Y, Z", X, Y, Z)
     return np.array([X, Y, Z])
 
 

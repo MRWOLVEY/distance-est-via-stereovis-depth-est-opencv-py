@@ -13,15 +13,15 @@ import triangulation as tri
 
 
 # Open both cameras
-cap_right = cv2.VideoCapture(0, cv2.CAP_DSHOW)                    
-cap_left =  cv2.VideoCapture(1, cv2.CAP_DSHOW)
+cap_right = cv2.VideoCapture(1, cv2.CAP_DSHOW)                    
+cap_left =  cv2.VideoCapture(2, cv2.CAP_DSHOW)
 
 
-frame_rate = 120    #Camera frame rate (maximum at 120 fps)
+frame_rate = 30    #Camera frame rate (maximum at 120 fps)
 
-B = 80               #Distance between the cameras [cm]
-f = 26               #Camera lense's focal length [mm]
-alpha = 64.6       #Camera field of view in the horisontal plane [degrees]
+B = 30               #Distance between the cameras [cm]
+f = 30               #Camera lense's focal length [mm]
+alpha = 60       #Camera field of view in the horisontal plane [degrees]
 
 
 #Initial values
