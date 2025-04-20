@@ -1,45 +1,42 @@
 import cv2 as cv
 import numpy as np
-import matplotlib.pyplot as plt
 
-img1 = cv.imread("samples/lt/lt3.jpg")#lt
-img2 = cv.imread("samples/rt/rt3.jpg")#rt
+def draw_center_lines(frame):
+    height, width = frame.shape[:2]
+    # Draw vertical center line
+    cv.line(frame, (width // 2, 0), (width // 2, height), (255, 0, 0), 2)
+    # Draw horizontal center line
+    cv.line(frame, (0, height // 2), (width, height // 2), (255, 0, 0), 2)
 
+def main():
+    # Open video capture for two cameras
+    cap1 = cv.VideoCapture(2)  # Change to the appropriate camera index if needed
+    cap2 = cv.VideoCapture(1)  # Change to the appropriate camera index if needed
 
-#draw a grid with equal area squares on both images
-def draw_grid(image,step,):
-    # Get image dimensions
-    height, width = image.shape[:2]
+    while True:
+        ret1, frame1 = cap1.read()
+        ret2, frame2 = cap2.read()
 
-    # Draw vertical lines
-    for x in range(0, width, step):
-        cv.line(image, (x, 0), (x, height), (0, 255, 0), 1)
+        if not ret1 or not ret2:
+            print("Failed to capture video from one of the cameras.")
+            break
 
-    # Draw horizontal lines
-    for y in range(0, height, step):
-        cv.line(image, (0, y), (width, y), (0, 255, 0), 1)
-    cv.line(image, (0, int(image.shape[0] / 2)), (image.shape[1], int(image.shape[0] / 2)), (255, 0, 0), 2)
-    cv.line(image, (int(image.shape[1] / 2),0), (int(image.shape[1]/2), int(image.shape[0])), (255, 0, 0), 2)
+        # Draw center lines on both frames
+        draw_center_lines(frame1)
+        draw_center_lines(frame2)
 
-draw_grid(img1,100)
-draw_grid(img2,100)
+        # Display the frames
+        cv.imshow('left', frame1)
+        cv.imshow('right', frame2)
 
-cv.line(img1,(1000,0),(1000,3000),(0,0,255),2)
-cv.line(img1,(2500,0),(2500,3000),(0,0,255),2)
-cv.line(img1,(3900,0),(3900,3000),(0,0,255),2)
-cv.line(img2,(500,0),(500,3000),(0,0,255),2) 
-cv.line(img2,(2000,0),(2000,3000),(0,0,255),2) 
-cv.line(img2,(3500,0),(3500,3000),(0,0,255),2) 
+        # Break the loop on 'q' key press
+        if cv.waitKey(1) & 0xFF == ord('q'):
+            break
 
-#saving the images
-# cv.imwrite("lt_grid.jpg",img1)
-# cv.imwrite("rt_grid.jpg",img2)
+    # Release the video captures and close windows
+    cap1.release()
+    cap2.release()
+    cv.destroyAllWindows()
 
-
-#display images using plt subplots
-fig, axes = plt.subplots(1, 2, figsize=(10, 5))
-axes[0].imshow(cv.cvtColor(img1, cv.COLOR_BGR2RGB))
-axes[0].set_title("Left Image")
-axes[1].imshow(cv.cvtColor(img2, cv.COLOR_BGR2RGB))
-axes[1].set_title("Right Image")
-plt.show()
+if __name__ == "__main__":
+    main()

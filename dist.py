@@ -5,6 +5,7 @@ import time
 import imutils
 from matplotlib import pyplot as plt
 from ultralytics import YOLO
+import torch
 
 
 # Functions
@@ -17,6 +18,163 @@ import triangulation as tri
 # Open both cameras
 # cap_right = cv2.VideoCapture(0, cv2.CAP_DSHOW)                    
 # cap_left =  cv2.VideoCapture(1, cv2.CAP_DSHOW)
+def mainMain():
+    K = np.load('./mediumCalib/results/CalibrationMatrix_gotTheCams_cpt.npz')['Camera_matrix']
+    dist_coeff = np.load('./mediumCalib/results/CalibrationMatrix_gotTheCams_cpt.npz')['distCoeff']
+    cap_right = cv2.VideoCapture(1, cv2.CAP_DSHOW)                    
+    cap_left =  cv2.VideoCapture(2, cv2.CAP_DSHOW)
+    cap_right.set(cv2.CAP_PROP_FPS, 30)
+    cap_left.set(cv2.CAP_PROP_FPS, 30)
+    det_counter = 29
+    while True:
+
+        if not cap_right.isOpened() or not cap_left.isOpened():
+            print("Error: Could not open video capture.")
+            break
+
+        ret_right, frame_right = cap_right.read()
+        ret_left, frame_left = cap_left.read()
+        det_counter += 1
+        if not ret_right or not ret_left:
+            print("Error: Could not read frames from video capture.")
+            break
+
+        frame_rate = 30
+        B = 11.5
+        f = 30
+        alpha = 55
+        if det_counter % 30 == 0:
+        # if True:
+            frame_right = cv2.undistort(frame_right, K, dist_coeff)
+            frame_left = cv2.undistort(frame_left, K, dist_coeff)
+            detections_right = obj_det(frame_right)
+            detections_left = obj_det(frame_left)
+
+        
+
+        # car_centers_right, human_centers_right = get_centers(detections_right)
+        # car_centers_left, human_centers_left = get_centers(detections_left)
+        # car_spot1_rt=closest_centers_to_roi(500,2000,car_centers_right)
+        # car_spot1_lt=closest_centers_to_roi(1000,2500,car_centers_left)
+        # car_spot2_rt=closest_centers_to_roi(2000,3500,car_centers_right)
+        # car_spot2_lt=closest_centers_to_roi(2500,4000,car_centers_left)
+        # person_spot1_rt=closest_centers_to_roi(500,2000,human_centers_right)
+        # person_spot1_lt=closest_centers_to_roi(1000,2500,human_centers_left)
+        # person_spot2_rt=closest_centers_to_roi(2000,3500,human_centers_right)
+        # person_spot2_lt=closest_centers_to_roi(2500,4000,human_centers_left)
+        # spots=[{"p":{'l':person_spot1_lt,'r':person_spot1_rt},"c":{'l':car_spot1_lt,'r':car_spot1_rt}},
+        #        {"p":{'l':person_spot2_lt,'r':person_spot2_rt},"c":{'l':car_spot2_lt,'r':car_spot2_rt}}]
+        # print(spots)
+
+        centers_right, centers_left = [], []
+
+        #drawing detection boxes
+        for i in range(len(detections_right)):
+            x1, y1, x2, y2 = map(int, detections_right[i].xyxy[0])  # Convert coordinates to integers
+            center_right = ((x1+x2)//2, (y1+y2)//2)
+            if int(detections_right[i].cls[0].item()) == 67:
+                cv2.rectangle(frame_right, (x1, y1), (x2, y2), (0, 255, 0), 2)  # Green box
+                # print(int(detections_right[i].cls[0].item()))
+                centers_right.append(center_right)
+                cv2.circle(frame_right, center_right, radius=10, color=(0, 255, 0), thickness=2)
+                cv2.putText(frame_right, str(detections_right[i].cls[0]), (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
+
+        for i in range(len(detections_left)):
+            # x1, y1, x2, y2 = map(int, box.xyxy[0])  # Convert coordinates to integers
+            x1, y1, x2, y2 = map(int, detections_left[i].xyxy[0])  # Convert coordinates to integers
+            #create circle at the center filled with radius of 2 color reqd
+            center_left = ((x1+x2)//2, (y1+y2)//2)
+            if int(detections_left[i].cls[0].item()) == 67:
+                cv2.rectangle(frame_left, (x1, y1), (x2, y2), (0, 255, 0), 2)  # Green box
+                # print(int(detections_right[i].cls[0].item()))
+                centers_left.append(center_left)
+                cv2.circle(frame_left, center_left, radius=10, color=(0, 255, 0), thickness=2)
+
+                cv2.putText(frame_left, str(detections_left[i].cls[0]), (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
+
+        # print('centers Left', centers_left)
+        # print('centers_right', centers_right)
+        centers_left, centers_right = sorted(centers_left, key=lambda x:x[0]), sorted(centers_right, key=lambda x:x[0])
+        depths = list()
+        for i in range(min(len(centers_left), len(centers_right))):
+            depth = tri.find_depth(centers_right[i], centers_left[i], frame_right, frame_left, B, f, alpha)
+            depths.append(depth)
+        print(depths)
+        
+        positions = list()
+        for i in range(len(depths)):
+            x, y, z = pixel_to_3d(centers_left[i][0], centers_left[i][1], depths[i], K)
+            positions.append((x, y, z))
+            # print(f"3D coordinates of object {i}: ({x:.2f}, {y:.2f}, {z:.2f})")
+        if det_counter % 30 == 0:
+            print(positions)
+        for i in range(len(positions)):
+            for j in range(i, len(positions)):
+                if i!= j:
+                    cv2.line(frame_left, centers_left[i], centers_left[j], (0, 255, 0), 2)
+                    print(positions)
+                    distance = compute_distance(np.array(positions[i]), np.array(positions[j]))
+                    # distance=0
+                    cv2.putText(frame_left, f"Distance: {distance:.2f}", ((centers_left[i][0]+centers_left[j][0])//2, (centers_left[i][1]+centers_left[j][1])//2), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
+
+
+        
+
+        # draw_spot_coordinates(spots,frame_left,frame_right)
+
+        # cv2.line(frame_left,(1000,0),(1000,3000),(0,0,255),2)
+        # cv2.line(frame_left,(2500,0),(2500,3000),(0,0,255),2)
+        # cv2.line(frame_left,(3900,0),(3900,3000),(0,0,255),2)
+        # cv2.line(frame_right,(500,0),(500,3000),(0,0,255),2) 
+        # cv2.line(frame_right,(2000,0),(2000,3000),(0,0,255),2) 
+        # cv2.line(frame_right,(3500,0),(3500,3000),(0,0,255),2) 
+
+        # cv2.putText(frame_left,"spot_1", (1300,300),cv2.FONT_HERSHEY_SIMPLEX, 10, (0, 0, 0), 10)
+        # cv2.putText(frame_left,"spot_2", (2800,300),cv2.FONT_HERSHEY_SIMPLEX, 10, (0, 0, 0), 10)
+        # cv2.putText(frame_right,"spot_1",(800,300),cv2.FONT_HERSHEY_SIMPLEX, 10, (0, 0, 0), 10)
+        # cv2.putText(frame_right,"spot_2",(2300,300),cv2.FONT_HERSHEY_SIMPLEX, 10, (0, 0, 0), 10)
+
+        # Calculating depth for objects in each spot
+        # depths=[{'p':[],'c':[]} for i in range(len(spots))]
+        # for i in range(len(spots)):
+        #     p_coords_lt=spots[i]['p']['l']
+        #     p_coords_rt=spots[i]['p']['r']
+        #     c_coords_lt=spots[i]['c']['l']
+        #     c_coords_rt=spots[i]['c']['r']
+        #     for j in range(len(p_coords_lt)):
+        #         print(p_coords_rt[j],p_coords_lt[j])      
+        #         depths[i]['p'].append(tri.find_depth(p_coords_rt[j],p_coords_lt[j],frame_right,frame_left,B,f,alpha))
+        #     for j in range(len(c_coords_lt)):         
+        #         print(c_coords_rt[j],c_coords_lt[j])   
+        #         depths[i]['c'].append(tri.find_depth(c_coords_rt[j],c_coords_lt[j],frame_right,frame_left,B,f,alpha))
+
+        # print(depths)
+        # draw_depths(spots,depths,frame_left,frame_right)
+
+        # Display the frames with drawings
+        # fig, axes = plt.subplots(1, 2, figsize=(10, 5))
+        # axes[0].imshow(cv2.cvtColor(frame_left,cv2.COLOR_BGR2RGB))
+        # axes[0].set_title("Left Image")
+        # axes[1].imshow(cv2.cvtColor(frame_right,cv2.COLOR_BGR2RGB))
+        # axes[1].set_title("Right Image")
+        # plt.show()
+        cv2.imshow("frame right", frame_right) 
+        cv2.imshow("frame left", frame_left)
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
+
+    # Release and destroy all windows before termination
+    cap_right.release()
+    cap_left.release()
+
+    cv2.destroyAllWindows()
+
+
+
+
+
+
+
 def main():
     frame_right = cv2.imread('samples/rt/rt3.jpg')
     frame_left = cv2.imread('samples/lt/lt3.jpg')
@@ -224,6 +382,10 @@ def main():
 def obj_det(frame):
     # Load YOLOv5 model
     model = YOLO("yolo11s.pt")
+
+    model.to('cuda:0')  # Move model to GPU if available
+
+    print(torch.cuda.is_available())
     
     results = model(frame) 
 
@@ -320,7 +482,7 @@ def pixel_to_3d(u, v, depth, K):
     Y = (v - cy) * Z / fy
     # X = X.cpu().numpy()
     # Y = Y.cpu().numpy()
-    print("X, Y, Z", X, Y, Z)
+    # print("X, Y, Z", X, Y, Z)
     return np.array([X, Y, Z])
 
 
@@ -394,5 +556,5 @@ def draw_depths(spots,depths, frame_left, frame_right):
             cv2.putText(frame_right,str(depths[i]['c'][j]),spots[i]['c']['r'][j],cv2.FONT_HERSHEY_SIMPLEX, 4, (0, 0, 0), 4)
 
 
-main()
+mainMain()
 """AUF DER HEIDE BLÜHT EIN KLEINES BLUMLEIN UND DAS HEIßT ERIKA"""
