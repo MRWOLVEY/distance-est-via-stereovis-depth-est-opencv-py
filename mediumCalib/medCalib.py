@@ -19,7 +19,7 @@ img_points_2D = []  # 2d points in image plane.
 
 
 import glob
-image_files = glob.glob("test/captured_frames/*.jpg")
+image_files = glob.glob("test/captured_frames/Meine Fotos/*.jpg")
 
 for image in image_files:
     #print(image)
@@ -42,7 +42,7 @@ ret, mtx, dist_coeff, R_vecs, T_vecs = cv2.calibrateCamera(obj_points_3D, img_po
 print("calibrated")
 result_path = './results/'
 np.savez(
-    f"{result_path}/CalibrationMatrix_gotTheCams_cpt",
+    f"{result_path}/CalibrationMatrix_MeineFotos_cpt",
     Camera_matrix=mtx,
     distCoeff=dist_coeff,
     RotationalV=R_vecs,

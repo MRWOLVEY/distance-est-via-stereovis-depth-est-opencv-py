@@ -6,37 +6,26 @@ import matplotlib.pyplot as plt
 img1 = cv2.imread("left.jpg", cv2.IMREAD_GRAYSCALE)  # Left image
 img2 = cv2.imread("right.jpg", cv2.IMREAD_GRAYSCALE)  # Right image
 
-"""Camera Calibration: we need a fu*king chessboard. :("""
-
-""" """
 
 if img1 is None or img2 is None:
     raise ValueError("One or both images could not be loaded. Check the file paths.")
 
-# Load images
-# img1 = cv2.imread("left.jpg")
-# img2 = cv2.imread("right.jpg")
 
-"""according to chatGPT, my phone's cam's params are as follows:"""
-fx = 2967
-cx = 2048
-fy = 2967
-cy = 1536
-
-k1 = -0.25
-k2 = 0.10
-p1 = 0.0
-p2 = 0.0
-k3 = -0.05
-
-# Load camera parameters (replace with actual values)
-camera_matrix = np.array([[fx, 0, cx], [0, fy, cy], [0, 0, 1]])  # Intrinsic params
-dist_coeffs = np.array([k1, k2, p1, p2, k3])  # Distortion coefficients
+# Load camera parameters from calibration
+camera_matrix = np.load("mediumCalib/results/gpt_calibration_data.npz")["camera_matrix"]
+dist_coeffs = np.load("mediumCalib/results/gpt_calibration_data.npz")["dist_coeffs"]
 
 # Stereo rectification
-baseline = 0.06
-R = np.eye(3)  # Assuming no rotation (modify if needed)
-T = np.array([[baseline], [0], [0]])  # Baseline along X-axis
+baseline = 9
+R = np.eye(3)  # Rotation matrix (identity for no rotation)
+T = np.array([[baseline], [0], [0]])  # Translation vector (baseline along x-axis)
+
+# Ensure consistent dtype (float64 is standard for OpenCV calibration)
+camera_matrix = camera_matrix.astype(np.float64)
+dist_coeffs = dist_coeffs.astype(np.float64)
+R = R.astype(np.float64)
+T = T.astype(np.float64)
+
 
 R1, R2, P1, P2, Q, _, _ = cv2.stereoRectify(
     camera_matrix, dist_coeffs, camera_matrix, dist_coeffs, img1.shape[:2], R, T
@@ -49,21 +38,19 @@ map2x, map2y = cv2.initUndistortRectifyMap(camera_matrix, dist_coeffs, R2, P2, i
 rectified1 = cv2.remap(img1, map1x, map1y, cv2.INTER_LINEAR)
 rectified2 = cv2.remap(img2, map2x, map2y, cv2.INTER_LINEAR)
 
-cv2.imwrite("rectified_left.jpg", rectified1)
-cv2.imwrite("rectified_right.jpg", rectified2)
-
+cv2.imshow("rectified_left.jpg", rectified1)
+cv2.imshow("rectified_right.jpg", rectified2)
+cv2.waitKey(0)
+cv2.destroyAllWindows()
 
 # Stereo Block Matching (SBM) for disparity map computation
 stereo = cv2.StereoSGBM_create(
     minDisparity=0,  # Minimum possible disparity
-    numDisparities=64,  # Must be divisible by 16
-    blockSize=9,  # Matched block size (odd number)
+    numDisparities=16 * 5,  # Must be divisible by 16
+    blockSize=5,  # Matched block size (odd number)
     P1=8 * 3 * 9**2,  # Regularization term for smoothness (empirical tuning)
     P2=32 * 3 * 9**2,  # Stronger regularization
-    disp12MaxDiff=1,  # Max allowed difference between left-right disparity
-    uniquenessRatio=10,  # Reject weak matches
-    speckleWindowSize=100,  # Filter out noise
-    speckleRange=32,  # Ignore large disparity jumps
+    mode=cv2.STEREO_SGBM_MODE_SGBM_3WAY,  # SGBM mode
 )
 
 # Compute the disparity map

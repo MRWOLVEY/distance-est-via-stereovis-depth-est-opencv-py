@@ -2,7 +2,9 @@ import cv2
 import time
 import os
 
-def capture_frames(video_source=1, capture_interval=5, total_frames=20, output_dir="captured_frames"):
+# 2 for right and 1 for left
+
+def capture_frames(video_source=2, capture_interval=8, total_frames=20, output_dir="captured_frames/RIGHT/"):
     """
     Captures frames from a video source every `capture_interval` seconds until `total_frames` are captured.
     Displays the video feed with a countdown timer.
